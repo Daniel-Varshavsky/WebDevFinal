@@ -1,9 +1,10 @@
+// app/page.tsx
 import Link from "next/link";
 
 export default function Home() {
   return (
     <>
-      <h1>Afeka Travel Planner 2026</h1>
+      <h1>מסלול טיולים אפקה 2026</h1>
 
       <nav>
         <ul>
@@ -16,6 +17,7 @@ export default function Home() {
       <div className="card">
         <p>
           Create realistic hiking and biking routes with weather forecast integration.
+          Powered by AI waypoint suggestions and real road routing.
         </p>
       </div>
     </>

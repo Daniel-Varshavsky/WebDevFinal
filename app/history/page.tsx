@@ -1,10 +1,21 @@
+// app/history/page.tsx
 "use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import MapIframe from "../plan/MapIframe";
+import WeatherForecast from "../plan/WeatherForecast";
 
 type LatLng = [number, number];
+
+type DayForecast = {
+  date: string;
+  maxTempC: number;
+  minTempC: number;
+  precipMm: number;
+  description: string;
+  emoji: string;
+};
 
 type RoutePlan = {
   id: number;
@@ -22,20 +33,18 @@ export default function HistoryPage() {
   const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
   const [selectedDay, setSelectedDay] = useState(1);
 
-  /**
-   * Loads saved route history for the current user.
-   */
+  // Weather for the currently selected plan
+  const [weather, setWeather] = useState<DayForecast[]>([]);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+
   async function loadHistory() {
     setLoading(true);
-
     try {
       const r = await fetch("/api/route/history");
-
       if (!r.ok) throw new Error(await r.text());
 
       const json = await r.json();
       const nextPlans = (json.plans ?? []) as RoutePlan[];
-
       setPlans(nextPlans);
 
       if (nextPlans.length > 0) {
@@ -58,50 +67,31 @@ export default function HistoryPage() {
     [plans, selectedPlanId]
   );
 
+  // Fetch fresh weather whenever the selected plan changes
+  useEffect(() => {
+    if (!selectedPlan) return;
+
+    setWeather([]);
+    setWeatherLoading(true);
+
+    fetch(
+      `/api/weather?lat=${selectedPlan.center[0]}&lon=${selectedPlan.center[1]}`
+    )
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((json) => setWeather(json.weather ?? []))
+      .catch(() => setWeather([]))
+      .finally(() => setWeatherLoading(false));
+  }, [selectedPlan?.id]);
+
   const selectedDayRoute = selectedPlan?.days.find((d) => d.day === selectedDay);
 
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 12,
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <h1 style={{ margin: 0 }}>Route History</h1>
-
         <div style={{ display: "flex", gap: 8 }}>
-          <Link
-            href="/"
-            style={{
-              padding: "8px 12px",
-              borderRadius: 8,
-              border: "1px solid #ccc",
-              textDecoration: "none",
-              color: "inherit",
-              background: "#fff",
-              fontWeight: 500,
-            }}
-          >
-            ← Back to Home
-          </Link>
-
-          <Link
-            href="/plan"
-            style={{
-              padding: "8px 12px",
-              borderRadius: 8,
-              border: "1px solid #ccc",
-              textDecoration: "none",
-              color: "inherit",
-              background: "#fff",
-              fontWeight: 500,
-            }}
-          >
-            Plan Routes
-          </Link>
+          <Link href="/" style={linkStyle}>← Back to Home</Link>
+          <Link href="/plan" style={linkStyle}>Plan Routes</Link>
         </div>
       </div>
 
@@ -124,7 +114,6 @@ export default function HistoryPage() {
                   onChange={(e) => {
                     const nextId = Number(e.target.value);
                     setSelectedPlanId(nextId);
-
                     const p = plans.find((x) => x.id === nextId);
                     setSelectedDay(p?.days[0]?.day ?? 1);
                   }}
@@ -168,9 +157,30 @@ export default function HistoryPage() {
                 <MapIframe center={selectedPlan.center} polyline={selectedDayRoute.polyline} />
               </>
             )}
+
+            {/* Fresh weather forecast for this destination */}
+            {selectedPlan && (
+              <div style={{ marginTop: 8 }}>
+                {weatherLoading ? (
+                  <p style={{ color: "#888", fontSize: 13 }}>Loading weather forecast...</p>
+                ) : (
+                  <WeatherForecast weather={weather} />
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
     </>
   );
 }
+
+const linkStyle: React.CSSProperties = {
+  padding: "8px 12px",
+  borderRadius: 8,
+  border: "1px solid #ccc",
+  textDecoration: "none",
+  color: "inherit",
+  background: "#fff",
+  fontWeight: 500,
+};

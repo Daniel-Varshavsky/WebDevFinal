@@ -2,8 +2,8 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import MapIframe from "./MapIframe";
-import WeatherForecast from "./WeatherForecast";
+import MapIframe from "../../ui/MapIframe";
+import WeatherForecast from "../../ui/WeatherForecast";
 import { saveRouteAction } from "./actions";
 
 type LatLng = [number, number];

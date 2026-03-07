@@ -3,8 +3,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import MapIframe from "../plan/MapIframe";
-import WeatherForecast from "../plan/WeatherForecast";
+import MapIframe from "../../ui/MapIframe";
+import WeatherForecast from "../../ui/WeatherForecast";
 
 type LatLng = [number, number];
 

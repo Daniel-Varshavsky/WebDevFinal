@@ -1,30 +1,19 @@
 // app/api/route/history/route.ts
 import { NextResponse } from "next/server";
 import { getRoutePlansByUser, saveRoutePlan } from "@/lib/routeHistory";
+import { getUserFromRequest } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 
 type LatLng = [number, number];
 
 /**
- * Reads the current user id from a trusted request header.
- * Replace this later with JWT verification / middleware forwarding.
- */function getUserId(req: Request): number {
-  const raw = req.headers.get("x-user-id");
-  const userId = Number(raw);
-
-  if (!raw || !Number.isInteger(userId) || userId <= 0) {
-    throw new Error("Unauthorized");
-  }
-
-  return userId;
-}
-
-/**
  * Returns the saved route history for the current user.
+ * The user is identified via the verified JWT cookie (handled by lib/auth.ts).
  */
 export async function GET(req: Request) {
   try {
-    const userId = getUserId(req);
-    const plans = await getRoutePlansByUser(userId);
+    const user = await getUserFromRequest(req);
+    const plans = await getRoutePlansByUser(user.id);
     return NextResponse.json({ plans });
   } catch (error: any) {
     const status = error?.message === "Unauthorized" ? 401 : 500;
@@ -33,11 +22,12 @@ export async function GET(req: Request) {
 }
 
 /**
- * Saves an approved generated route plan for the current user.
+ * Saves an approved generated route plan for the current user,
+ * then revalidates the history page so the new entry is visible immediately.
  */
 export async function POST(req: Request) {
   try {
-    const userId = getUserId(req);
+    const user = await getUserFromRequest(req);
     const body = await req.json();
 
     const title = String(body?.title ?? "").trim();
@@ -63,13 +53,16 @@ export async function POST(req: Request) {
     }
 
     const planId = await saveRoutePlan({
-      userId,
+      userId: user.id,
       title,
       place,
       kind,
       center,
       days,
     });
+
+    // Tell Next.js the history page data has changed — no manual refresh needed
+    revalidatePath("/history");
 
     return NextResponse.json({ ok: true, planId });
   } catch (error: any) {

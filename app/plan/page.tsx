@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import MapIframe from "./MapIframe";
 import WeatherForecast from "./WeatherForecast";
+import { saveRouteAction } from "./actions";
 
 type LatLng = [number, number];
 
@@ -61,31 +62,29 @@ export default function PlanPage() {
     }
   }
 
+  /**
+   * Uses a Server Action instead of fetch('/api/route/history').
+   * The Server Action also calls revalidatePath('/history') automatically.
+   */
   async function approveAndSave() {
     if (!data) return;
     setSaving(true);
 
     try {
-      const r = await fetch("/api/route/history", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          title: data.title,
-          place: place.trim(),
-          kind: data.kind,
-          center: data.center,
-          // Strip weather + narrative before saving (not in DB schema)
-          days: data.days.map(({ day, distanceKm, polyline }) => ({
-            day,
-            distanceKm,
-            polyline,
-          })),
-        }),
+      // Pass the cookie header so the Server Action can authenticate the user
+      const { planId } = await saveRouteAction(document.cookie, {
+        title: data.title,
+        place: place.trim(),
+        kind: data.kind,
+        center: data.center,
+        days: data.days.map(({ day, distanceKm, polyline }) => ({
+          day,
+          distanceKm,
+          polyline,
+        })),
       });
 
-      if (!r.ok) throw new Error(await r.text());
-      const json = await r.json();
-      setSavedPlanId(Number(json.planId));
+      setSavedPlanId(planId);
       alert("Route saved to history ✅");
     } catch (e: any) {
       alert(e?.message ?? "Failed to save route");
@@ -110,7 +109,7 @@ export default function PlanPage() {
         </div>
       </div>
 
-      {/* Form */}
+      {/* Form — generate still uses fetch because it waits for an AI response */}
       <div className="card">
         <form onSubmit={(e) => { e.preventDefault(); generate(); }}>
           <label>
@@ -181,14 +180,12 @@ export default function PlanPage() {
 
           <h2 style={{ marginBottom: 6 }}>{data.title}</h2>
 
-          {/* Trip narrative from GPT-4o */}
           {data.tripNarrative && (
             <p style={{ color: "#555", fontSize: 14, marginBottom: 12, lineHeight: 1.6 }}>
               {data.tripNarrative}
             </p>
           )}
 
-          {/* Day/Route selector + approve button */}
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
             <span><b>Type:</b> {data.kind}</span>
 
@@ -203,31 +200,28 @@ export default function PlanPage() {
               </select>
             </label>
 
+            {/* Approve & Save now calls a Server Action */}
             <button type="button" onClick={approveAndSave} disabled={saving || !!savedPlanId}>
               {saving ? "Saving..." : savedPlanId ? `✅ Saved (#${savedPlanId})` : "Approve & Save"}
             </button>
           </div>
 
-          {/* Day narrative */}
           {selectedItem?.narrative && (
             <p style={{ color: "#555", fontSize: 14, marginBottom: 8, lineHeight: 1.5 }}>
               📍 {selectedItem.narrative}
             </p>
           )}
 
-          {/* Distance */}
           {selectedItem && (
             <p style={{ marginBottom: 8 }}>
               <b>Distance:</b> {selectedItem.distanceKm} km
             </p>
           )}
 
-          {/* Map */}
           {selectedItem && (
             <MapIframe center={data.center} polyline={selectedItem.polyline} />
           )}
 
-          {/* Weather forecast */}
           <WeatherForecast weather={data.weather} />
         </div>
       )}

@@ -71,8 +71,8 @@ export default function PlanPage() {
     setSaving(true);
 
     try {
-      // Pass the cookie header so the Server Action can authenticate the user
-      const { planId } = await saveRouteAction(document.cookie, {
+      // No need to pass document.cookie — the Server Action reads it directly
+      const { planId } = await saveRouteAction({
         title: data.title,
         place: place.trim(),
         kind: data.kind,

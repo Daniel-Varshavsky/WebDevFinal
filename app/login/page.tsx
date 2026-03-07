@@ -2,15 +2,42 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
-import { useSearchParams } from "next/navigation";
-import { loginAction } from "@/app/api/auth/actions";
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/";
 
-  const [error, formAction, pending] = useActionState(loginAction, null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPending(true);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+
+    // POST to the Next.js proxy route, which forwards to Express
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        email: formData.get("email"),
+        password: formData.get("password"),
+      }),
+    });
+
+    if (!res.ok) {
+      setError(await res.text());
+      setPending(false);
+      return;
+    }
+
+    router.push(next);
+  }
 
   return (
     <div className="card">
@@ -28,19 +55,15 @@ export default function LoginPage() {
         </p>
       )}
 
-      <form action={formAction}>
-        <input type="hidden" name="next" value={next} />
-
+      <form onSubmit={handleSubmit}>
         <label>
           Email
           <input name="email" type="email" required autoComplete="email" />
         </label>
-
         <label>
           Password
           <input name="password" type="password" required autoComplete="current-password" />
         </label>
-
         <button type="submit" disabled={pending}>
           {pending ? "Signing in..." : "Login"}
         </button>

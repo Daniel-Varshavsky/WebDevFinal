@@ -5,6 +5,7 @@ import { useState } from "react";
 import MapIframe from "../../ui/MapIframe";
 import WeatherForecast from "../../ui/WeatherForecast";
 import { saveRouteAction } from "./actions";
+import Image from "next/image";
 
 type LatLng = [number, number];
 
@@ -157,11 +158,13 @@ export default function PlanPage() {
         <div className="card">
           {/* Destination photo */}
           {data.photo && (
-            <div style={{ marginBottom: 16, borderRadius: 10, overflow: "hidden", position: "relative" }}>
-              <img
+            <div style={{ position: "relative", width: "100%", height: 260, marginBottom: 16, borderRadius: 10, overflow: "hidden" }}>
+              <Image
                 src={data.photo.url}
                 alt={place}
-                style={{ width: "100%", maxHeight: 260, objectFit: "cover", display: "block" }}
+                fill
+                style={{ objectFit: "cover" }}
+                sizes="(max-width: 900px) 100vw, 900px"
               />
               <div style={{
                 position: "absolute", bottom: 0, right: 0,

@@ -6,9 +6,7 @@ import HistoryClient from "../../ui/HistoryClient";
 
 export default async function HistoryPage() {
   const user = await getUserFromCookies();
-  console.log("USER:", user);
   const plans = await getRoutePlansByUser(user.id);
-  console.log("PLANS:", plans);
 
   return (
     <>

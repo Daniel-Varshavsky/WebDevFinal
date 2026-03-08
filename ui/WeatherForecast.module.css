@@ -1,0 +1,36 @@
+/* ui/WeatherForecast.module.css */
+.forecastGrid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.card {
+  border-radius: 10px;
+  padding: 12px 16px;
+  min-width: 130px;
+  text-align: center;
+  flex: 1 1 130px;
+  border: 1px solid;
+}
+
+.cardSunny {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.cardRainy {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.cardSnowy {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.cardDefault {
+  background: #f0f7ff;
+  border-color: #cce0ff;
+}

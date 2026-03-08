@@ -41,7 +41,7 @@ When asked, you respond ONLY with a valid JSON object — no markdown, no explan
   const userPrompt =
     kind === "bike"
       ? `Plan a ${days}-day bike trip starting from ${place}.
-Each day should cover 30–70 km on roads, ending in a different town/village.
+Each day should cover 25–55 km between waypoints.
 For each day provide 3–5 waypoints (real places with accurate lat/lon coordinates).
 
 Respond with this exact JSON shape:
@@ -60,7 +60,7 @@ Respond with this exact JSON shape:
   ]
 }`
       : `Plan ${days} hiking loop route(s) starting and ending at ${place}.
-Each loop should be 5–10 km, staying on hiking trails near ${place}.
+Each loop should cover 4–8 km between waypoints.
 For each route provide 3–5 waypoints (real places with accurate lat/lon coordinates),
 where the first and last waypoint are both at or very near ${place}.
 
@@ -87,7 +87,7 @@ Respond with this exact JSON shape:
       Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
-      model: "llama-3.1-8b-instant",
+      model: "llama-3.3-70b-versatile",
       temperature: 0.7,
       max_tokens: 1500,
       messages: [

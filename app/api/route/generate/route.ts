@@ -91,14 +91,17 @@ export async function POST(req: Request) {
     }[] = [];
 
     for (const llmDay of llmPlan.days) {
-      // Fallback: if GPT returned fewer waypoints than expected, use start point
-      const points =
+      const rawPoints =
         llmDay.waypoints.length >= 2
-          ? llmDay.waypoints.map((w) => ({ lat: w.lat, lon: w.lon }))
+          ? llmDay.waypoints
           : [
-              { lat: start.lat, lon: start.lon },
-              { lat: start.lat + 0.05, lon: start.lon + 0.05 },
+              { name: "Start", lat: start.lat, lon: start.lon },
+              { name: "End", lat: start.lat + 0.05, lon: start.lon + 0.05 },
             ];
+
+      // Filter out waypoints that are unreasonably far from the start
+      const sanitized = sanitizeWaypoints(rawPoints, start.lat, start.lon, kind);
+      const points = sanitized.map((w) => ({ lat: w.lat, lon: w.lon }));
 
       try {
         const routed = await osrmRoute(points);
@@ -109,10 +112,13 @@ export async function POST(req: Request) {
           narrative: llmDay.narrative,
         });
       } catch {
-        // If OSRM fails for this day, skip it rather than crashing
         console.warn(`OSRM failed for day ${llmDay.day}, skipping`);
       }
     }
+
+    const warnings: string[] = dayPlans
+      .map((d) => getDistanceWarning(kind, d.distanceKm, d.day))
+      .filter((w): w is string => w !== null);
 
     if (dayPlans.length === 0) {
       return new NextResponse("Failed to generate any routes", { status: 500 });
@@ -142,9 +148,56 @@ export async function POST(req: Request) {
       days: dayPlans,
       weather,
       photo,
+      warnings,
     });
   } catch (e: any) {
     console.error("Generate route error:", e);
     return new NextResponse(e?.message ?? "Error", { status: 500 });
   }
+}
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Filters out waypoints that are too far from the start point
+function sanitizeWaypoints(
+  waypoints: { name: string; lat: number; lon: number }[],
+  startLat: number,
+  startLon: number,
+  kind: "bike" | "hike"
+): { name: string; lat: number; lon: number }[] {
+  // Maximum straight-line distance any single waypoint should be from the start
+  // Bike: 55 km target total, so no waypoint should be more than 55 km from start
+  // Hike: 8 km target total, so no waypoint should be more than 8 km from start
+  const maxDistFromStart = kind === "bike" ? 55 : 8;
+
+  const filtered = waypoints.filter((wp) => {
+    const dist = haversineKm(startLat, startLon, wp.lat, wp.lon);
+    return dist <= maxDistFromStart;
+  });
+
+  // Need at least 2 waypoints to make a route
+  if (filtered.length < 2) return waypoints; // fall back to original if filtering removed too much
+  return filtered;
+}
+
+function getDistanceWarning(kind: "bike" | "hike", distanceKm: number, day: number): string | null {
+  if (kind === "bike") {
+    if (distanceKm < 30) return `Day ${day}: ${distanceKm} km is below the 30 km minimum for bike routes.`;
+    if (distanceKm > 70) return `Day ${day}: ${distanceKm} km exceeds the 70 km maximum for bike routes.`;
+  }
+  if (kind === "hike") {
+    if (distanceKm < 5) return `Route ${day}: ${distanceKm} km is below the 5 km minimum for hike routes.`;
+    if (distanceKm > 10) return `Route ${day}: ${distanceKm} km exceeds the 10 km maximum for hike routes.`;
+  }
+  return null;
 }

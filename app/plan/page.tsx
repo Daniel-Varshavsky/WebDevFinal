@@ -26,6 +26,7 @@ type ApiResp = {
   days: { day: number; distanceKm: number; polyline: LatLng[]; narrative: string }[];
   weather: DayForecast[];
   photo: { url: string; photographer: string; photographerLink: string } | null;
+  warnings: string[];
 };
 
 export default function PlanPage() {
@@ -182,6 +183,24 @@ export default function PlanPage() {
           )}
 
           <h2 style={{ marginBottom: 6 }}>{data.title}</h2>
+
+          {data.warnings && data.warnings.length > 0 && (
+            <div style={{
+              background: "#fffbeb",
+              border: "1px solid #fde68a",
+              borderRadius: 8,
+              padding: "10px 14px",
+              marginBottom: 12,
+            }}>
+              <p style={{ fontWeight: 600, marginBottom: 4 }}>⚠️ Distance warnings:</p>
+              {data.warnings.map((w, i) => (
+                <p key={i} style={{ fontSize: 13, color: "#92400e" }}>{w}</p>
+              ))}
+              <p style={{ fontSize: 12, color: "#aaa", marginTop: 6 }}>
+                You can still approve and save this route, or generate a new one.
+              </p>
+            </div>
+          )}
 
           {data.tripNarrative && (
             <p style={{ color: "#555", fontSize: 14, marginBottom: 12, lineHeight: 1.6 }}>

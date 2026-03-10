@@ -7,7 +7,7 @@
 | Name | GitHub |
 |------|--------|
 | Daniel Varshavsky | https://github.com/Daniel-Varshavsky/WebDevFinal |
-| Yuval Gefen | [GITHUB URL 2] |
+| Yuval Gefen |  |
 
 ## Deployment
 

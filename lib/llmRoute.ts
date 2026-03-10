@@ -18,7 +18,7 @@ type LLMRouteResult = {
 };
 
 /**
- * Calls Groq (llama-3.1-8b-instant) to suggest realistic waypoints and a narrative
+ * Calls Groq (llama-3.3-70b-versatile) to suggest realistic waypoints and a narrative
  * for a bike or hike trip.
  * Returns structured JSON with waypoints (lat/lon) that OSRM will then route through.
  *

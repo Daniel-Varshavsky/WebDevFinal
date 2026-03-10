@@ -20,7 +20,7 @@ This project runs locally only. Cloud deployment was attempted on Vercel, but it
 Afeka Travel Planner is a full-stack web application that generates realistic hiking and biking routes using AI, renders them on an interactive map, and shows a 3-day weather forecast for the destination.
 
 **Key features:**
-- AI-generated route waypoints via Groq (llama-3.3-70b)
+- AI-generated route waypoints via Groq (llama-3.3-70b-versatile)
 - Real road routing via OSRM (not straight lines)
 - Interactive Leaflet.js map with Start/End markers
 - 3-day weather forecast via Open-Meteo
@@ -38,7 +38,7 @@ Afeka Travel Planner is a full-stack web application that generates realistic hi
 | Frontend + SSR | Next.js 15 (App Router) |
 | Auth Server | Express.js |
 | Database | PostgreSQL |
-| LLM | Groq API (llama-3.3-70b) |
+| LLM | Groq API (llama-3.3-70b-versatile) |
 | Routing | OSRM (Open Source Routing Machine) |
 | Weather | Open-Meteo API |
 | Photos | Pixabay API |

@@ -9,9 +9,9 @@
 | Daniel Varshavsky | https://github.com/Daniel-Varshavsky/WebDevFinal |
 | Yuval Gefen | [GITHUB URL 2] |
 
-## Live URL
+## Deployment
 
-> [DEPLOYMENT URL — to be added]
+This project runs locally only. Cloud deployment was attempted on Vercel, but it is not possible because Vercel is a serverless platform — it cannot host a persistent Express server.
 
 ---
 
@@ -25,7 +25,7 @@ Afeka Travel Planner is a full-stack web application that generates realistic hi
 - Interactive Leaflet.js map with Start/End markers
 - 3-day weather forecast via Open-Meteo
 - Destination photo via Pixabay
-- Route approval and save to database
+- Route approval and save to the database
 - Route history with fresh weather per saved trip
 - JWT authentication with silent daily refresh
 
@@ -217,4 +217,4 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## Known Limitations
 
 - **Route distance constraints** — the app targets 30–70 km per day for bike routes and 5–10 km per loop for hike routes. Due to the LLM's imprecise spatial reasoning and real road inflation, actual distances may deviate by ~3–10 km. Mitigations applied: tightened prompt ranges, Haversine-based waypoint sanitization, and on-screen warnings when constraints are exceeded.
-- **Deployment URL** — to be added after cloud deployment is complete.
+- **No cloud deployment** — Vercel (serverless-only) cannot host a persistent Express server. Local deployment approved by lecturer.
